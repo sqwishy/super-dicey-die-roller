@@ -1,0 +1,12 @@
+rule cp
+  command = cp $in $out
+
+rule sassc
+  command = sassc $in $out
+
+rule elm
+    command = elm make $in --output $out
+
+build srv/style.css: sassc style.sass
+build srv/roller.js: elm src/Roll.elm
+build srv/index.html: cp index.html

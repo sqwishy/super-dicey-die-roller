@@ -1,0 +1,140 @@
+// vim: sw=2
+@import "gruvbox.scss"
+
+@keyframes wiggle
+  0%   { transform: rotate(0deg)  }
+  10%  { transform: rotate(9deg)  }
+  30%  { transform: rotate(-9deg) }
+  50%  { transform: rotate(9deg)  }
+  70%  { transform: rotate(-9deg) }
+  90%  { transform: rotate(9deg)  }
+  100% { transform: rotate(0deg)  }
+
+// duplicated in order to force an animation replay by switching animation names
+@keyframes waggle
+  0%   { transform: rotate(0deg)  }
+  10%  { transform: rotate(9deg)  }
+  30%  { transform: rotate(-9deg) }
+  50%  { transform: rotate(9deg)  }
+  70%  { transform: rotate(-9deg) }
+  90%  { transform: rotate(9deg)  }
+  100% { transform: rotate(0deg)  }
+
+@keyframes popin
+  0%  { transform: scale(0.00, 0.00) rotate(10deg) }
+  100%  { transform: scale(1.00, 1.00) rotate(0) }
+
+html
+  font-family: system-ui
+  font-size: 1.4rem
+  color: $gb-lm-fg0
+  height: 100%
+
+body
+  margin: 0
+  height: 100%
+
+  background: $gb-lm-bg0
+  display: grid
+  justify-content: center
+  align-content: center
+
+input, button
+  transition: border-color 0.15s, background-color 0.15s
+
+@mixin box()
+  width:  2rem
+  height: 2rem
+  // display: flex
+  // align-items: center
+  // text-align:  center
+  // justify-content: center
+  // padding: .3rem // todo valign with flex?
+  line-height: 2rem
+  text-align: center
+  box-sizing: border-box
+
+$gap: 6px
+
+.die-roller
+  // outline: 1px solid fade-out($gb-lm-dark-blue, 0.8) // debug
+  display: flex
+  flex-direction: column
+  grid-gap: $gap
+
+  max-width: 460px
+  min-width: 100%
+  width: 80%
+
+  padding: $gap
+  box-sizing: border-box
+
+  .roller-input
+    display: flex
+    grid-gap: $gap
+
+    input, button
+      @include box
+      font-size: 1rem
+      padding: 0 .4rem
+
+      color: $gb-lm-fg0
+      background: $gb-lm-bg1
+      border: 1px solid $gb-lm-bg2
+      border-radius: 4px
+      outline: 0
+
+      &:hover
+        border-color: $gb-lm-dark-blue
+      &:focus
+        border-color: $gb-lm-dark-blue
+        background-color: $gb-lm-bg0
+
+    input
+      text-align: left
+      flex: 1 1 100%
+      min-width: 0
+      width: 100%
+
+    button
+      flex: 0 0 auto
+      min-width: 4.5rem
+      width: auto
+      cursor: pointer
+      &:active
+        background-color: $gb-lm-bg0-hard
+
+    button
+      display: flex
+      grid-gap: $gap
+      justify-content: space-between
+
+  &.err .roller-input input
+    border-color: $gb-lm-dark-red
+
+  &.ok .input-result
+    display: none
+  &.err .input-result
+    display: block
+
+  .roll-sum-sign
+    color: $gb-lm-fg4
+    font-weight: 300
+
+  .dice-roll
+    display: flex
+    flex-wrap: wrap
+    grid-gap: $gap
+    text-align: center
+
+    .roll-face
+      @include box
+      border: 1px solid $gb-lm-bg2
+      border-radius: 4px
+
+  .roll-result.result-error
+
+  &.wiggle .roll-face
+    animation-name: wiggle
+  &.waggle .roll-face
+    animation-name: waggle
