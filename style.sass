@@ -20,15 +20,25 @@
   90%  { transform: rotate(9deg)  }
   100% { transform: rotate(0deg)  }
 
-@keyframes popin
-  0%  { transform: scale(0.00, 0.00) rotate(10deg) }
-  100%  { transform: scale(1.00, 1.00) rotate(0) }
+@keyframes rise
+  0%   { transform: translateY(50%); opacity: 0; height: 0; }
+  100% { transform: translateY(0);   opacity: 1; height: 100%; }
+
+@keyframes fall
+  0%   { transform: translateY(0);   opacity: 1 }
+  100% { transform: translateY(50%); opacity: 0 }
+
+// @keyframes togray
+//   0%   { filter: grayscale(0)    }
+//   100% { filter: grayscale(100%) }
 
 html
-  font-family: system-ui
+  height: 100%
+
+html, input, button
+  font-family: system-ui, sans-serif
   font-size: 1.4rem
   color: $gb-lm-fg0
-  height: 100%
 
 body
   margin: 0
@@ -42,7 +52,13 @@ body
 input, button
   transition: border-color 0.15s, background-color 0.15s
 
-@mixin box()
+@mixin box-like()
+  border: 1px solid $gb-lm-bg2
+  border-radius: 4px
+  outline: 0
+  box-sizing: border-box
+
+@mixin box-shape()
   width:  2rem
   height: 2rem
   // display: flex
@@ -50,9 +66,12 @@ input, button
   // text-align:  center
   // justify-content: center
   // padding: .3rem // todo valign with flex?
-  line-height: 2rem
+  line-height: 1.8rem
   text-align: center
-  box-sizing: border-box
+
+@mixin box()
+  @include box-like()
+  @include box-shape()
 
 $gap: 6px
 
@@ -78,17 +97,10 @@ $gap: 6px
       font-size: 1rem
       padding: 0 .4rem
 
-      color: $gb-lm-fg0
-      background: $gb-lm-bg1
-      border: 1px solid $gb-lm-bg2
-      border-radius: 4px
-      outline: 0
-
-      &:hover
+      &:not(:disabled):hover
         border-color: $gb-lm-dark-blue
-      &:focus
+      &:not(:disabled):focus
         border-color: $gb-lm-dark-blue
-        background-color: $gb-lm-bg0
 
     input
       text-align: left
@@ -96,30 +108,58 @@ $gap: 6px
       min-width: 0
       width: 100%
 
+      background: $gb-lm-bg0
+      &:focus
+        background: $gb-lm-bg0-hard
+
     button
       flex: 0 0 auto
       min-width: 4.5rem
       width: auto
-      cursor: pointer
+      &:not(:disabled)
+        cursor: pointer
+
+      background: linear-gradient(to top, $gb-lm-bg1, $gb-lm-bg0-soft)
       &:active
-        background-color: $gb-lm-bg0-hard
+        background: $gb-lm-bg0-hard
+
+      &:disabled
+        background: $gb-lm-bg0
+        // & .re-roll-icon
+        //   animation-name: togray
 
     button
       display: flex
       grid-gap: $gap
       justify-content: space-between
 
-  &.err .roller-input input
-    border-color: $gb-lm-dark-red
+  .input-result
+    // @include box-like
+    width: 100%
+    padding: .4rem
+    position: relative
+    // background-color: $gb-lm-bg1
+
+    .annotated-input
+      color: $gb-lm-fg3
+      .bad-input
+        text-decoration: underline
+        color: $gb-lm-dark-red
+
+    .suggestion
+      margin-left: 8px
+
+  .input-result
+    animation: 0.15s rise
+    animation-delay: 1s
 
   &.ok .input-result
-    display: none
-  &.err .input-result
-    display: block
+    animation-name: fall
 
   .roll-sum-sign
     color: $gb-lm-fg4
     font-weight: 300
+    line-height: 1.6rem // idk makes the weird >> guy look nicer
 
   .dice-roll
     display: flex
@@ -129,10 +169,6 @@ $gap: 6px
 
     .roll-face
       @include box
-      border: 1px solid $gb-lm-bg2
-      border-radius: 4px
-
-  .roll-result.result-error
 
   &.wiggle .roll-face
     animation-name: wiggle

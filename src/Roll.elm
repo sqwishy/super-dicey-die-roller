@@ -2,10 +2,30 @@ module Roll exposing (main, view)
 
 import Browser
 import Html exposing (Html, button, div, input, span, text)
-import Html.Attributes exposing (class, classList, name, style, value)
+import Html.Attributes exposing (class, classList, disabled, name, style, value)
 import Html.Events exposing (onClick, onInput)
 import Parser exposing ((|.), (|=), Parser)
+import Parser.Advanced as ParserA
 import Random
+
+
+mapEmpty : String -> String -> String
+mapEmpty from to =
+    if String.isEmpty from then
+        to
+
+    else
+        from
+
+
+resultIsErr : Result a b -> Bool
+resultIsErr res =
+    case res of
+        Ok _ ->
+            False
+
+        Err _ ->
+            True
 
 
 type Die
@@ -68,8 +88,29 @@ generateRolls roll =
 parseRoll : Parser Roll
 parseRoll =
     Parser.succeed Roll
-        |= Parser.int
+        |= parseCount
         |= parseDie
+        |. Parser.symbol ""
+
+
+parseCount : Parser Int
+parseCount =
+    Parser.succeed ()
+        |. Parser.chompWhile Char.isDigit
+        |> Parser.getChompedString
+        |> Parser.andThen
+            (\s ->
+                if String.isEmpty s then
+                    Parser.succeed 1
+
+                else
+                    case String.toInt s of
+                        Just int ->
+                            Parser.succeed int
+
+                        Nothing ->
+                            ParserA.problem Parser.ExpectingInt
+            )
 
 
 parseDie : Parser Die
@@ -90,8 +131,12 @@ parseDie =
                         Parser.map Sided Parser.int
 
                     _ ->
-                        Parser.problem "expected f or d<n>"
+                        Parser.problem "try f or d<n>"
             )
+
+
+type alias InputErr =
+    List Parser.DeadEnd
 
 
 type alias RolledDie =
@@ -102,7 +147,7 @@ type alias Model =
     { roll : Roll
     , text : String
     , dice : List RolledDie
-    , result : Result String ()
+    , result : Result InputErr ()
     , reanimate : Bool
     }
 
@@ -144,12 +189,12 @@ modelForText s model =
             ( { model | text = s, result = Ok () }, rerollCmd roll )
 
         Err e ->
-            ( { model | text = s, result = Err (Debug.toString e) }, Cmd.none )
+            ( { model | text = s, result = Err (Debug.log "parseRoll" e) }, Cmd.none )
 
 
 init : () -> ( Model, Cmd Msg )
 init _ =
-    newModel |> modelForText "4df"
+    newModel |> modelForText "dasdf"
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
@@ -204,12 +249,12 @@ view : Model -> Html Msg
 view model =
     div [ class "die-roller", class (reanimateClass model.reanimate), class (resultClass model.result) ]
         [ viewDiceRoll model.roll model.dice
-        , viewResult model.result
+        , viewResult model.text model.result
         , div [ class "roller-input" ]
             [ input [ onInput WithDice, value model.text ] []
-            , button [ onClick ReRoll, name "re-roll" ]
+            , button [ onClick ReRoll, name "re-roll", disabled (resultIsErr model.result) ]
                 [ span [ class "re-roll-icon" ] [ text "🎲" ]
-                , span [ class "roll-sum-sign" ] [ text "=" ]
+                , span [ class "roll-sum-sign" ] [ text "»" ]
                 , span [ class "roll-sum" ]
                     [ text (rollSumTxt model.roll.die (rollSum model.dice))
                     ]
@@ -238,11 +283,73 @@ viewRollSum roll sum =
     span [ class "roll-sum" ] [ text (rollSumTxt roll.die sum) ]
 
 
-viewResult : Result String () -> Html Msg
-viewResult res =
-    case res of
-        Ok () ->
-            div [ class "input-result" ] []
+viewResult : String -> Result InputErr () -> Html msg
+viewResult input res =
+    let
+        children =
+            case res of
+                Ok _ ->
+                    []
 
-        Err e ->
-            div [ class "input-result result-e.2rror" ] [ text e ]
+                Err err ->
+                    viewInputErr input err
+    in
+    div [ class "input-result" ] children
+
+
+viewInputErr : String -> InputErr -> List (Html msg)
+viewInputErr input errList =
+    errList
+        |> List.map (viewDeadEnd input)
+        |> List.foldr (++) []
+
+
+type alias MarkedInput =
+    { head : String
+    , bad : String
+    , tail : String
+    }
+
+
+markedInput : String -> ( Int, Int ) -> MarkedInput
+markedInput input ( row, col ) =
+    { head = input |> String.left (col - 1)
+    , bad = input |> String.dropLeft (col - 1) |> String.left 1
+    , tail = input |> String.dropLeft col
+    }
+
+
+suggestionForProblem : MarkedInput -> Parser.Problem -> String
+suggestionForProblem marked problem =
+    case problem of
+        Parser.ExpectingInt ->
+            if String.isEmpty marked.bad then
+                "type a number"
+
+            else
+                "expected a number"
+
+        Parser.Problem s ->
+            s
+
+        _ ->
+            Debug.toString problem
+
+
+viewDeadEnd : String -> Parser.DeadEnd -> List (Html msg)
+viewDeadEnd input err =
+    let
+        marked =
+            markedInput input ( err.row, err.col )
+    in
+    [ span [ class "annotated-input" ]
+        [ span [] [ text marked.head ]
+        , span [ class "bad-input" ] [ text (mapEmpty marked.bad "\u{2002}") ]
+        , span [] [ text marked.tail ]
+        ]
+    , span
+        [ class "suggestion" ]
+        [ text "« "
+        , text (suggestionForProblem marked err.problem)
+        ]
+    ]
