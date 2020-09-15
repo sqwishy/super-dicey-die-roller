@@ -2,7 +2,16 @@ module Roll exposing (main, view)
 
 import Browser
 import Html exposing (Html, button, div, input, span, text)
-import Html.Attributes exposing (class, classList, disabled, name, style, value)
+import Html.Attributes
+    exposing
+        ( class
+        , classList
+        , disabled
+        , name
+        , placeholder
+        , style
+        , value
+        )
 import Html.Events exposing (onClick, onInput)
 import Parser exposing ((|.), (|=), Parser)
 import Parser.Advanced as ParserA
@@ -88,12 +97,12 @@ generateRolls roll =
 parseRoll : Parser Roll
 parseRoll =
     Parser.succeed Roll
-        |= parseCount
+        |= Parser.map (Maybe.withDefault 1) parseCount
         |= parseDie
-        |. Parser.symbol ""
+        |. Parser.end
 
 
-parseCount : Parser Int
+parseCount : Parser (Maybe Int)
 parseCount =
     Parser.succeed ()
         |. Parser.chompWhile Char.isDigit
@@ -101,12 +110,12 @@ parseCount =
         |> Parser.andThen
             (\s ->
                 if String.isEmpty s then
-                    Parser.succeed 1
+                    Parser.succeed Nothing
 
                 else
                     case String.toInt s of
                         Just int ->
-                            Parser.succeed int
+                            Parser.succeed (Just int)
 
                         Nothing ->
                             ParserA.problem Parser.ExpectingInt
@@ -128,7 +137,7 @@ parseDie =
                         Parser.succeed Fate
 
                     "d" ->
-                        Parser.map Sided Parser.int
+                        Parser.map (\m -> Sided (Maybe.withDefault 6 m)) parseCount
 
                     _ ->
                         Parser.problem "try f or d<n>"
@@ -194,7 +203,7 @@ modelForText s model =
 
 init : () -> ( Model, Cmd Msg )
 init _ =
-    newModel |> modelForText "dasdf"
+    newModel |> modelForText "4d"
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
@@ -249,9 +258,8 @@ view : Model -> Html Msg
 view model =
     div [ class "die-roller", class (reanimateClass model.reanimate), class (resultClass model.result) ]
         [ viewDiceRoll model.roll model.dice
-        , viewResult model.text model.result
         , div [ class "roller-input" ]
-            [ input [ onInput WithDice, value model.text ] []
+            [ input [ onInput WithDice, value model.text, placeholder "try 2d, d20, or 4f" ] []
             , button [ onClick ReRoll, name "re-roll", disabled (resultIsErr model.result) ]
                 [ span [ class "re-roll-icon" ] [ text "🎲" ]
                 , span [ class "roll-sum-sign" ] [ text "»" ]
@@ -260,6 +268,7 @@ view model =
                     ]
                 ]
             ]
+        , viewResult model.text model.result
         ]
 
 
