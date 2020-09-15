@@ -205,7 +205,7 @@ modelForText s model =
                 ( { model | text = s, result = Ok () }, rerollCmd roll )
 
             Err e ->
-                ( { model | text = s, result = Err (Debug.log "parseRoll" e) }, Cmd.none )
+                ( { model | text = s, result = Err e }, Cmd.none )
 
 
 init : () -> ( Model, Cmd Msg )
@@ -227,12 +227,19 @@ update msg model =
 
 
 main =
-    Browser.element
+    Browser.document
         { init = init
         , subscriptions = \x -> Sub.none
         , update = update
-        , view = view
+        , view = viewDoc
         }
+
+
+viewDoc : Model -> Browser.Document Msg
+viewDoc model =
+    { title = "Tiny Dice Roller Button"
+    , body = [ view model ]
+    }
 
 
 resultClass res =
@@ -468,7 +475,7 @@ suggestionForProblem marked problem =
             "can't parse this extra stuff"
 
         _ ->
-            Debug.toString problem
+            "this input is weird"
 
 
 viewDeadEnd : String -> Parser.DeadEnd -> List (Html msg)
