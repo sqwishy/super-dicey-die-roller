@@ -1,7 +1,7 @@
 module Roll exposing (main, view)
 
 import Browser
-import Html exposing (Html, button, div, input, span, text)
+import Html exposing (Html, button, div, em, input, span, text)
 import Html.Attributes
     exposing
         ( class
@@ -13,6 +13,7 @@ import Html.Attributes
         , value
         )
 import Html.Events exposing (onClick, onInput)
+import NumberToWords
 import Parser exposing ((|.), (|=), Parser)
 import Parser.Advanced as ParserA
 import Random
@@ -75,9 +76,9 @@ dieFaceTxt die face =
             String.fromInt face
 
 
-rollSumTxt : Die -> Int -> String
-rollSumTxt die sum =
-    case die of
+rollSumStr : Roll -> Int -> String
+rollSumStr roll sum =
+    case roll.die of
         Fate ->
             if sum > 0 then
                 "+" ++ String.fromInt sum
@@ -97,8 +98,10 @@ generateRolls roll =
 parseRoll : Parser Roll
 parseRoll =
     Parser.succeed Roll
+        |. Parser.spaces
         |= Parser.map (Maybe.withDefault 1) parseCount
         |= parseDie
+        |. Parser.spaces
         |. Parser.end
 
 
@@ -140,7 +143,7 @@ parseDie =
                         Parser.map (\m -> Sided (Maybe.withDefault 6 m)) parseCount
 
                     _ ->
-                        Parser.problem "try f or d<n>"
+                        Parser.problem "try \"f\" or \"d\""
             )
 
 
@@ -193,17 +196,21 @@ newModel =
 
 modelForText : String -> Model -> ( Model, Cmd Msg )
 modelForText s model =
-    case Parser.run parseRoll s of
-        Ok roll ->
-            ( { model | text = s, result = Ok () }, rerollCmd roll )
+    if String.isEmpty s then
+        ( { model | text = s, result = Ok () }, Cmd.none )
 
-        Err e ->
-            ( { model | text = s, result = Err (Debug.log "parseRoll" e) }, Cmd.none )
+    else
+        case Parser.run parseRoll s of
+            Ok roll ->
+                ( { model | text = s, result = Ok () }, rerollCmd roll )
+
+            Err e ->
+                ( { model | text = s, result = Err (Debug.log "parseRoll" e) }, Cmd.none )
 
 
 init : () -> ( Model, Cmd Msg )
 init _ =
-    newModel |> modelForText "4d"
+    newModel |> modelForText "4f"
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
@@ -254,21 +261,83 @@ rollSum dice =
     dice |> List.map (\d -> d.face) |> List.sum
 
 
+type Outcome
+    = Whatever
+    | Good
+    | Bad
+
+
+outcomeClass : Outcome -> String
+outcomeClass outcome =
+    case outcome of
+        Whatever ->
+            ""
+
+        Good ->
+            "yay"
+
+        Bad ->
+            "nay"
+
+
+outcomeForRange : { hi : Int, lo : Int } -> Int -> Outcome
+outcomeForRange range n =
+    if n == range.lo then
+        Bad
+
+    else if n == range.hi then
+        Good
+
+    else
+        Whatever
+
+
+rollFaceStyle : Die -> Int -> Outcome
+rollFaceStyle die face =
+    case die of
+        Fate ->
+            Whatever
+
+        Sided s ->
+            if s >= 4 then
+                outcomeForRange { lo = 1, hi = s } face
+
+            else
+                Whatever
+
+
+rollSumStyle : Roll -> Int -> Outcome
+rollSumStyle roll sum =
+    case roll.die of
+        Fate ->
+            if roll.count >= 4 then
+                outcomeForRange { lo = -roll.count, hi = roll.count } sum
+
+            else
+                Whatever
+
+        Sided _ ->
+            Whatever
+
+
 view : Model -> Html Msg
 view model =
+    let
+        sum =
+            rollSum model.dice
+    in
     div [ class "die-roller", class (reanimateClass model.reanimate), class (resultClass model.result) ]
         [ viewDiceRoll model.roll model.dice
         , div [ class "roller-input" ]
-            [ input [ onInput WithDice, value model.text, placeholder "try 2d, d20, or 4f" ] []
+            [ input [ onInput WithDice, value model.text, placeholder "try 2d d20 or 4f" ] []
             , button [ onClick ReRoll, name "re-roll", disabled (resultIsErr model.result) ]
                 [ span [ class "re-roll-icon" ] [ text "🎲" ]
                 , span [ class "roll-sum-sign" ] [ text "»" ]
-                , span [ class "roll-sum" ]
-                    [ text (rollSumTxt model.roll.die (rollSum model.dice))
-                    ]
+                , span [ class "roll-sum", class (rollSumStyle model.roll sum |> outcomeClass) ]
+                    [ rollSumStr model.roll sum |> text ]
                 ]
             ]
-        , viewResult model.text model.result
+        , viewResult model.text (Result.map (\_ -> model.roll) model.result)
         ]
 
 
@@ -283,27 +352,81 @@ viewDiceRoll roll dice =
 
 viewRollFace : Roll -> RolledDie -> Html Msg
 viewRollFace roll die =
-    span [ class "roll-face", style "animation-duration" (timingStyle die) ]
+    span
+        [ class "roll-face"
+        , style "animation-duration" (timingStyle die)
+        , class (rollFaceStyle roll.die die.face |> outcomeClass)
+        ]
         [ text (dieFaceTxt roll.die die.face) ]
 
 
 viewRollSum : Roll -> Int -> Html Msg
 viewRollSum roll sum =
-    span [ class "roll-sum" ] [ text (rollSumTxt roll.die sum) ]
+    span
+        [ class "roll-sum"
+        , class (rollSumStyle roll sum |> outcomeClass)
+        ]
+        [ text (rollSumStr roll sum) ]
 
 
-viewResult : String -> Result InputErr () -> Html msg
+viewResult : String -> Result InputErr Roll -> Html msg
 viewResult input res =
     let
         children =
             case res of
-                Ok _ ->
-                    []
+                Ok roll ->
+                    summarizeRoll roll
 
                 Err err ->
                     viewInputErr input err
     in
     div [ class "input-result" ] children
+
+
+
+{-
+   roll n fate die
+   roll n die with n side each
+   roll n dice with n sides each
+-}
+
+
+summarizeRoll : Roll -> List (Html msg)
+summarizeRoll roll =
+    [ text "roll "
+    , em [] [ text (NumberToWords.intToWords roll.count) ]
+    , text " "
+    ]
+        ++ (case roll.die of
+                Fate ->
+                    [ text "fate ", text (pluralize roll.count diceWord) ]
+
+                Sided sides ->
+                    [ text (pluralize roll.count diceWord)
+                    , text " with "
+                    , em [] [ text (NumberToWords.intToWords sides) ]
+                    , text " "
+                    , text (pluralize sides sideWord)
+                    , text " each"
+                    ]
+           )
+
+
+pluralize : Int -> { singular : String, plural : String } -> String
+pluralize n word =
+    if n == 1 then
+        word.singular
+
+    else
+        word.plural
+
+
+diceWord =
+    { singular = "die", plural = "dice" }
+
+
+sideWord =
+    { singular = "side", plural = "sides" }
 
 
 viewInputErr : String -> InputErr -> List (Html msg)
@@ -340,6 +463,9 @@ suggestionForProblem marked problem =
 
         Parser.Problem s ->
             s
+
+        Parser.ExpectingEnd ->
+            "can't parse this extra stuff"
 
         _ ->
             Debug.toString problem

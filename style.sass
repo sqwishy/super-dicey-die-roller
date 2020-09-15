@@ -20,20 +20,23 @@
   90%  { transform: rotate(9deg)  }
   100% { transform: rotate(0deg)  }
 
-@keyframes rise
-  0%   { transform: translateY(50%); opacity: 0; height: 0; }
-  100% { transform: translateY(0);   opacity: 1; height: 100%; }
+@keyframes roll
+  0%   { transform: rotate(0deg)   }
+  100% { transform: rotate(360deg) }
 
-@keyframes fall
-  0%   { transform: translateY(0);   opacity: 1 }
-  100% { transform: translateY(50%); opacity: 0 }
+@keyframes unroll
+  0%   { transform: rotate(360deg) }
+  100% { transform: rotate(0deg)   }
 
-// @keyframes togray
-//   0%   { filter: grayscale(0)    }
-//   100% { filter: grayscale(100%) }
+@keyframes flip
+  0%   { transform: scaleY(100%);  }
+  50%  { transform: scaleY(-100%); }
+  100% { transform: scaleY(100%);  }
 
-html
-  height: 100%
+@keyframes flop
+  0%   { transform: scaleX(100%);  }
+  50%  { transform: scaleX(-100%); }
+  100% { transform: scaleX(100%);  }
 
 html, input, button
   font-family: system-ui, sans-serif
@@ -42,12 +45,7 @@ html, input, button
 
 body
   margin: 0
-  height: 100%
-
   background: $gb-lm-bg0
-  display: grid
-  justify-content: center
-  align-content: center
 
 input, button
   transition: border-color 0.15s, background-color 0.15s
@@ -59,31 +57,41 @@ input, button
   box-sizing: border-box
 
 @mixin box-shape()
-  width:  2rem
   height: 2rem
+  line-height: 1.8rem
   // display: flex
   // align-items: center
   // text-align:  center
   // justify-content: center
   // padding: .3rem // todo valign with flex?
-  line-height: 1.8rem
-  text-align: center
 
 @mixin box()
-  @include box-like()
-  @include box-shape()
+  @include box-like
+  @include box-shape
+
+@mixin square-box()
+  @include box
+  width:  2rem
+  text-align: center
 
 $gap: 6px
 
+html, body
+  height: 100%
+body
+  display: flex
+  align-items: center
+  justify-content: center
+  .die-roller
+    flex: 1
+
 .die-roller
-  // outline: 1px solid fade-out($gb-lm-dark-blue, 0.8) // debug
   display: flex
   flex-direction: column
   grid-gap: $gap
 
-  max-width: 460px
-  min-width: 100%
-  width: 80%
+  max-width: 412.4px
+  // margin: 0 auto
 
   padding: $gap
   box-sizing: border-box
@@ -95,7 +103,7 @@ $gap: 6px
     input, button
       @include box
       font-size: 1rem
-      padding: 0 .4rem
+      padding: 0 .5rem
 
       &:not(:disabled):hover
         border-color: $gb-lm-dark-blue
@@ -103,14 +111,15 @@ $gap: 6px
         border-color: $gb-lm-dark-blue
 
     input
-      text-align: left
       flex: 1 1 100%
       min-width: 0
-      width: 100%
+      width: 2rem
 
       background: $gb-lm-bg0
       &:focus
         background: $gb-lm-bg0-hard
+
+      background: radial-gradient(ellipse at bottom, $gb-lm-bg0, $gb-lm-bg1)
 
     button
       flex: 0 0 auto
@@ -125,8 +134,9 @@ $gap: 6px
 
       &:disabled
         background: $gb-lm-bg0
-        // & .re-roll-icon
-        //   animation-name: togray
+
+      &:not(:disabled):hover
+        background: linear-gradient(to top, $gb-lm-bg2, $gb-lm-bg1)
 
     button
       display: flex
@@ -134,27 +144,51 @@ $gap: 6px
       justify-content: space-between
 
   .input-result
-    // @include box-like
-    width: 100%
-    padding: .4rem
-    position: relative
-    // background-color: $gb-lm-bg1
+    @include box
+    border-color: transparent
+
+    font-size: 0.7rem
+    padding: 0 .5rem
+    color: $gb-lm-fg3
+
+    white-space: nowrap
+    overflow: hidden
+    text-overflow: ellipsis
 
     .annotated-input
-      color: $gb-lm-fg3
+      font-size: 1rem
       .bad-input
         text-decoration: underline
         color: $gb-lm-dark-red
 
     .suggestion
+      color: $gb-lm-fg1
       margin-left: 8px
 
-  .input-result
-    animation: 0.15s rise
-    animation-delay: 1s
+  .re-roll-icon
+    animation-duration: 75ms
+    animation-iteration-count: 2
+    animation-timing-function: ease-out
 
-  &.ok .input-result
-    animation-name: fall
+  &.wiggle .re-roll-icon
+    animation-name: roll
+  &.waggle .re-roll-icon
+    animation-name: unroll
+
+  .roll-sum, .roll-face
+    &.yay
+      color: $gb-lm-light-green
+    &.nay
+      color: $gb-lm-light-orange
+
+  // .roll-sum
+  //   animation-duration: 150ms
+  //   animation-timing-function: ease-in-out
+
+  // &.wiggle .roll-sum
+  //   animation-name: flip
+  // &.waggle .roll-sum
+  //   animation-name: flop
 
   .roll-sum-sign
     color: $gb-lm-fg4
@@ -165,10 +199,12 @@ $gap: 6px
     display: flex
     flex-wrap: wrap
     grid-gap: $gap
-    text-align: center
 
     .roll-face
-      @include box
+      @include square-box
+      border-color: $gb-lm-bg2
+      font-weight: bold
+      animation-timing-function: ease-in-out
 
   &.wiggle .roll-face
     animation-name: wiggle
