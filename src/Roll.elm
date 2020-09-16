@@ -13,7 +13,7 @@ import Html.Attributes
         , value
         )
 import Html.Events exposing (onClick, onInput)
-import NumberToWords
+import NumberToWords exposing (intToWords)
 import Parser exposing ((|.), (|=), Parser)
 import Parser.Advanced as ParserA
 import Random
@@ -401,25 +401,25 @@ viewResult input res =
 summarizeRoll : Roll -> List (Html msg)
 summarizeRoll roll =
     [ text "roll "
-    , em [] [ text (NumberToWords.intToWords roll.count) ]
+    , em [] [ text (intToWords roll.count) ]
     , text " "
     ]
         ++ (case roll.die of
                 Fate ->
-                    [ text "fate ", text (pluralize roll.count diceWord) ]
+                    [ text "fate ", text (pluralize roll.count words.dice) ]
 
                 Sided sides ->
-                    [ text (pluralize roll.count diceWord)
+                    [ text (pluralize roll.count words.dice)
                     , text " with "
-                    , em [] [ text (NumberToWords.intToWords sides) ]
+                    , em [] [ text (intToWords sides) ]
                     , text " "
-                    , text (pluralize sides sideWord)
-                    , text " each"
+                    , text (pluralize sides words.sides)
+                    , text (pluralize roll.count { singular = "", plural = " each" })
                     ]
            )
 
 
-pluralize : Int -> { singular : String, plural : String } -> String
+pluralize : Int -> { singular : a, plural : a } -> a
 pluralize n word =
     if n == 1 then
         word.singular
@@ -428,12 +428,10 @@ pluralize n word =
         word.plural
 
 
-diceWord =
-    { singular = "die", plural = "dice" }
-
-
-sideWord =
-    { singular = "side", plural = "sides" }
+words =
+    { dice = { singular = "die", plural = "dice" }
+    , sides = { singular = "side", plural = "sides" }
+    }
 
 
 viewInputErr : String -> InputErr -> List (Html msg)
