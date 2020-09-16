@@ -1,5 +1,3 @@
-# elm_opts = --optimize
-
 rule cp
   command = cp $in $out
 
@@ -9,6 +7,6 @@ rule sassc
 rule elm
     command = elm make $in $elm_opts --output $out
 
-build srv/style.css: sassc style.sass
-build srv/tiny-dice-roller-button.js: elm src/Roll.elm
-build srv/index.html: cp index.html
+build srv/style.css: sassc www/style.sass
+build srv/super-dicey-die-roller.js: elm src/Roll.elm
+build srv/index.html: cp www/index.html
