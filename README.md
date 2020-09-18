@@ -1,5 +1,5 @@
-Super Dicey Dice Roller
-=======================
+Super Dicey Die Roller
+======================
 
 [![certified-by-dr-steve-bruhle](https://forthebadge.com/images/badges/certified-steve-bruhle.svg)](https://forthebadge.com)
 [![compatibility-club-penguin](https://forthebadge.com/images/badges/compatibility-club-penguin.svg)](https://forthebadge.com)

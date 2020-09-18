@@ -237,7 +237,7 @@ main =
 
 viewDoc : Model -> Browser.Document Msg
 viewDoc model =
-    { title = "Tiny Dice Roller Button"
+    { title = "Super Dicey Die Roller"
     , body = [ view model ]
     }
 
