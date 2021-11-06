@@ -184,7 +184,7 @@ type Msg
 
 rollFaceTimings : Roll -> Random.Generator (List Int)
 rollFaceTimings roll =
-    Random.list roll.count (Random.int 160 280)
+    Random.list roll.count (Random.int 120 360)
 
 
 rerollCmd : Roll -> Cmd Msg
@@ -315,7 +315,7 @@ rollFaceStyle : Die -> Int -> Outcome
 rollFaceStyle die face =
     case die of
         Fate ->
-            Whatever
+            outcomeForRange { lo = -1, hi = 1 } face
 
         Sided s ->
             if s >= 4 then
@@ -345,7 +345,16 @@ view model =
         sum =
             rollSum model.dice
     in
-    div [ class "die-roller", class (reanimateClass model.reanimate), class (resultClass model.result) ]
+    div
+        [ class "die-roller"
+        , class (reanimateClass model.reanimate)
+        , class (resultClass model.result)
+        , if model.roll.die == Fate then
+            class "fate"
+
+          else
+            class ""
+        ]
         [ viewDiceRoll model.roll model.dice
         , div [ class "roller-input" ]
             [ input [ onInput WithDice, value model.text, placeholder "try 2d d20 or 4f" ] []

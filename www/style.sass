@@ -114,11 +114,9 @@ body
       flex: 1 1 100%
       min-width: 2rem
 
-      background: $gb-lm-bg0
+      background: radial-gradient(ellipse at bottom, $gb-lm-bg0, $gb-lm-bg1)
       &:focus
         background: $gb-lm-bg0-hard
-
-      background: radial-gradient(ellipse at bottom, $gb-lm-bg0, $gb-lm-bg1)
 
     button
       flex: 0 0 auto
@@ -177,18 +175,9 @@ body
 
   .roll-sum, .roll-face
     &.yay
-      color: $gb-lm-light-green
+      color: $gb-lm-light-blue
     &.nay
       color: $gb-lm-light-orange
-
-  // .roll-sum
-  //   animation-duration: 150ms
-  //   animation-timing-function: ease-in-out
-
-  // &.wiggle .roll-sum
-  //   animation-name: flip
-  // &.waggle .roll-sum
-  //   animation-name: flop
 
   .roll-sum-sign
     color: $gb-lm-fg4
@@ -210,3 +199,6 @@ body
     animation-name: wiggle
   &.waggle .roll-face
     animation-name: waggle
+
+  &.fate .roll-face
+    font-size: 160%
