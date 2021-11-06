@@ -99,7 +99,10 @@ parseRoll : Parser Roll
 parseRoll =
     Parser.succeed Roll
         |. Parser.spaces
-        |= Parser.map (Maybe.withDefault 1) parseCount
+        |= (parseCount
+                |> Parser.map (Maybe.withDefault 1)
+                |> Parser.andThen allowCount
+           )
         |= parseDie
         |. Parser.spaces
         |. Parser.end
@@ -123,6 +126,15 @@ parseCount =
                         Nothing ->
                             ParserA.problem Parser.ExpectingInt
             )
+
+
+allowCount : Int -> Parser Int
+allowCount n =
+    if n <= 1000 then
+        Parser.succeed n
+
+    else
+        ParserA.problem (Parser.Expecting "too many rolls")
 
 
 parseDie : Parser Die
@@ -465,6 +477,9 @@ suggestionForProblem marked problem =
 
             else
                 "expected a number"
+
+        Parser.Expecting s ->
+            s
 
         Parser.Problem s ->
             s
