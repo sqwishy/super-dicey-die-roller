@@ -1,5 +1,6 @@
 // vim: sw=2
 @import "gruvbox.scss"
+@import "ayu.sass"
 
 @keyframes wiggle
   0%   { transform: rotate(0deg)  }
@@ -42,16 +43,22 @@ html, input, button
   font-family: system-ui, sans-serif
   font-size: 1.4rem
   color: $gb-lm-fg0
+  @media (prefers-color-scheme: dark)
+    color: $ayu-dm-fg0
 
 body
   margin: 0
   background: $gb-lm-bg0
+  @media (prefers-color-scheme: dark)
+    background: $ayu-dm-bg0
 
 input, button
   transition: border-color 0.15s, background-color 0.15s
 
 @mixin box-like()
   border: 1px solid $gb-lm-bg2
+  @media (prefers-color-scheme: dark)
+    border-color: $ayu-dm-bg2
   border-radius: 4px
   outline: 0
   box-sizing: border-box
@@ -59,11 +66,6 @@ input, button
 @mixin box-shape()
   height: 2rem
   line-height: 1.8rem
-  // display: flex
-  // align-items: center
-  // text-align:  center
-  // justify-content: center
-  // padding: .3rem // todo valign with flex?
 
 @mixin box()
   @include box-like
@@ -105,18 +107,24 @@ body
       font-size: 1rem
       padding: 0 .5rem
 
-      &:not(:disabled):hover
-        border-color: $gb-lm-dark-blue
+      &:not(:disabled):hover,
       &:not(:disabled):focus
         border-color: $gb-lm-dark-blue
+        @media (prefers-color-scheme: dark)
+          border-color: $ayu-dm-blue
 
     input
       flex: 1 1 100%
       min-width: 2rem
 
       background: radial-gradient(ellipse at bottom, $gb-lm-bg0, $gb-lm-bg1)
+      @media (prefers-color-scheme: dark)
+        background: radial-gradient(ellipse at bottom, $ayu-dm-bg1, $ayu-dm-bg0)
+
       &:focus
         background: $gb-lm-bg0-hard
+        @media (prefers-color-scheme: dark)
+          background: $ayu-dm-bg0
 
     button
       flex: 0 0 auto
@@ -126,14 +134,21 @@ body
         cursor: pointer
 
       background: linear-gradient(to top, $gb-lm-bg1, $gb-lm-bg0-soft)
-      &:active
-        background: $gb-lm-bg0-hard
+      @media (prefers-color-scheme: dark)
+        background: $ayu-dm-bg1
+
+      // &:active
+      //   background: $gb-lm-bg0-hard
 
       &:disabled
         background: $gb-lm-bg0
+        @media (prefers-color-scheme: dark)
+          background: $ayu-dm-bg0
 
       &:not(:disabled):hover
         background: linear-gradient(to top, $gb-lm-bg2, $gb-lm-bg1)
+        @media (prefers-color-scheme: dark)
+          background: linear-gradient(to top, $ayu-dm-bg1, $ayu-dm-bg0)
 
     button
       display: flex
@@ -142,12 +157,14 @@ body
       align-items: baseline
 
   .input-result
-    @include box
+    @include box-shape
     border-color: transparent
 
     font-size: 0.7rem
     padding: 0 .5rem
     color: $gb-lm-fg3
+    @media (prefers-color-scheme: dark)
+      color: $ayu-dm-fg2
 
     white-space: nowrap
     overflow: hidden
@@ -158,9 +175,13 @@ body
       .bad-input
         text-decoration: underline
         color: $gb-lm-dark-red
+        @media (prefers-color-scheme: dark)
+          color: $ayu-dm-red
 
     .suggestion
       color: $gb-lm-fg1
+      @media (prefers-color-scheme: dark)
+        color: $ayu-dm-fg1
       margin-left: 8px
 
   .re-roll-icon
@@ -176,11 +197,17 @@ body
   .roll-sum, .roll-face
     &.yay
       color: $gb-lm-light-blue
+      @media (prefers-color-scheme: dark)
+        color: $ayu-dm-blue
     &.nay
       color: $gb-lm-light-orange
+      @media (prefers-color-scheme: dark)
+        color: $ayu-dm-red
 
   .roll-sum-sign
     color: $gb-lm-fg4
+    @media (prefers-color-scheme: dark)
+      color: $ayu-dm-fg2
     font-weight: 300
     line-height: 1.6rem // idk makes the weird >> guy look nicer
 
@@ -192,6 +219,8 @@ body
     .roll-face
       @include square-box
       border-color: $gb-lm-bg2
+      @media (prefers-color-scheme: dark)
+        border-color: $ayu-dm-bg2
       font-weight: bold
       animation-timing-function: ease-in-out
 
